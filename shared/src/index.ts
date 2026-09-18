@@ -20,6 +20,26 @@ export const FEE_STATUSES = ["unpaid", "partial", "paid", "overdue"] as const;
 export type FeeStatus = (typeof FEE_STATUSES)[number];
 
 /* ------------------------------------------------------------------ *
+ * Academic calendar
+ * ------------------------------------------------------------------ */
+
+export const TERM_STATUSES = ["upcoming", "active", "completed"] as const;
+export type TermStatus = (typeof TERM_STATUSES)[number];
+
+export interface AcademicTerm {
+  id: string;
+  name: string;
+  /** e.g. "2026-2027" */
+  academicYear: string;
+  startDate: string;
+  endDate: string;
+  status: TermStatus;
+  /** Only one term may be active at a time; enforced server-side. */
+  isCurrent: boolean;
+  createdAt: string;
+}
+
+/* ------------------------------------------------------------------ *
  * Users
  * ------------------------------------------------------------------ */
 
@@ -54,6 +74,12 @@ export interface ClassSection {
   capacity: number;
   /** Class teacher's user id, if assigned. */
   classTeacherId?: string;
+  classTeacherName?: string;
+  /** Academic term this class belongs to. */
+  termId?: string;
+  isActive: boolean;
+  /** Number of students currently assigned (computed, not stored). */
+  studentCount?: number;
   createdAt: string;
 }
 
@@ -64,14 +90,18 @@ export interface Subject {
   code: string;
   creditHours: number;
   classSectionId?: string;
+  classSectionName?: string;
   teacherId?: string;
+  teacherName?: string;
+  termId?: string;
+  isActive: boolean;
   createdAt: string;
 }
 
 export interface Student {
   id: string;
   userId: string;
-  /** e.g. "STU-2026-0001" */
+  /** e.g. "STU-2026-0001" — server-generated, never client-supplied. */
   rollNumber: string;
   firstName: string;
   lastName: string;
@@ -79,21 +109,28 @@ export interface Student {
   dateOfBirth?: string;
   guardianName?: string;
   guardianPhone?: string;
+  /** Personal contact fields a student IS allowed to edit on their own profile. */
+  phone?: string;
+  address?: string;
   classSectionId?: string;
+  classSectionName?: string;
+  termId?: string;
+  isActive: boolean;
   enrolledAt: string;
 }
 
 export interface Teacher {
   id: string;
   userId: string;
-  /** e.g. "EMP-0012" */
+  /** e.g. "EMP-0001" — server-generated. */
   employeeId: string;
   firstName: string;
   lastName: string;
   email: string;
   phone?: string;
-  /** Subject ids or codes this teacher can teach. */
+  /** Subject codes this teacher can teach. */
   subjectCodes: string[];
+  isActive: boolean;
   joinedAt: string;
 }
 
@@ -257,21 +294,25 @@ export interface Announcement {
   id: string;
   title: string;
   body: string;
-  /** Empty array = visible to everyone. */
+  /** Empty array = visible to every role. */
   audienceRoles: Role[];
   classSectionId?: string;
+  classSectionName?: string;
   authorId: string;
+  authorName: string;
   createdAt: string;
 }
 
 export interface AuditLogEntry {
   id: string;
-  actorId: string;
+  actorId?: string;
   actorEmail: string;
   action: "create" | "update" | "delete";
   resource: string;
   resourceId: string;
-  /** Field-level diff for updates. */
+  /** Human-readable label for the affected record, captured at write time. */
+  resourceLabel?: string;
+  /** Field-level diff. Only populated for updates. */
   changes?: Record<string, { from: unknown; to: unknown }>;
   at: string;
 }
@@ -291,6 +332,101 @@ export interface Pagination {
 export interface Paginated<T> {
   items: T[];
   pagination: Pagination;
+}
+
+/** Standard list query params — shared so client and server agree on names. */
+export interface ListQuery {
+  page?: number;
+  limit?: number;
+  /** Free-text search across the entity's searchable fields. */
+  search?: string;
+  /** Field to sort by; validated against an allow-list server-side. */
+  sortBy?: string;
+  sortDir?: "asc" | "desc";
+  /** Include soft-deleted (inactive) records. Admin-only in practice. */
+  includeInactive?: boolean;
+}
+
+/* ------------------------------------------------------------------ *
+ * Create / update payloads
+ * ------------------------------------------------------------------ */
+
+export interface TermInput {
+  name: string;
+  academicYear: string;
+  startDate: string;
+  endDate: string;
+  status?: TermStatus;
+  isCurrent?: boolean;
+}
+
+export interface ClassSectionInput {
+  gradeLevel: string;
+  section: string;
+  capacity: number;
+  classTeacherId?: string;
+  termId?: string;
+}
+
+export interface SubjectInput {
+  name: string;
+  code: string;
+  creditHours: number;
+  classSectionId?: string;
+  teacherId?: string;
+  termId?: string;
+}
+
+/** Admin creating a student: provisions the login AND the academic profile. */
+export interface StudentCreateInput {
+  firstName: string;
+  lastName: string;
+  email: string;
+  /** Optional — if omitted the server generates a temporary one. */
+  password?: string;
+  dateOfBirth?: string;
+  guardianName?: string;
+  guardianPhone?: string;
+  phone?: string;
+  address?: string;
+  classSectionId?: string;
+}
+
+/**
+ * What a student may edit on their OWN profile — deliberately narrow.
+ * Academic fields (roll number, class, term) are admin-only.
+ */
+export interface StudentSelfUpdateInput {
+  phone?: string;
+  address?: string;
+  guardianName?: string;
+  guardianPhone?: string;
+}
+
+/** Admin updating any student field. */
+export interface StudentAdminUpdateInput extends StudentSelfUpdateInput {
+  firstName?: string;
+  lastName?: string;
+  dateOfBirth?: string;
+  classSectionId?: string;
+  isActive?: boolean;
+}
+
+export interface TeacherCreateInput {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password?: string;
+  phone?: string;
+  subjectCodes?: string[];
+}
+
+export interface TeacherUpdateInput {
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  subjectCodes?: string[];
+  isActive?: boolean;
 }
 
 /** Every successful single-resource response is wrapped in this. */
