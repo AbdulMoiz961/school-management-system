@@ -3,6 +3,13 @@ import { ProtectedRoute, RoleRoute, GuestRoute } from "./guards";
 import LoginPage from "@/pages/login";
 import RegisterPage from "@/pages/register";
 import DashboardPage from "@/pages/dashboard";
+import TermsPage from "@/pages/terms";
+import ClassesPage from "@/pages/classes";
+import SubjectsPage from "@/pages/subjects";
+import StudentsPage from "@/pages/students";
+import TeachersPage from "@/pages/teachers";
+import AuditPage from "@/pages/audit";
+import ProfilePage from "@/pages/profile";
 import { ComingSoon } from "@/pages/coming-soon";
 
 export function AppRoutes() {
@@ -36,30 +43,14 @@ export function AppRoutes() {
         }
       />
 
-      {/* Students */}
-      <Route
-        path="/students"
-        element={
-          <RoleRoute roles={["admin", "teacher"]}>
-            <ComingSoon title="Students" phase="Phase 3 — Core CRUD" />
-          </RoleRoute>
-        }
-      />
-      <Route
-        path="/students/:id"
-        element={
-          <RoleRoute roles={["admin", "teacher"]}>
-            <ComingSoon title="Student profile" phase="Phase 3 — Core CRUD" />
-          </RoleRoute>
-        }
-      />
+      {/* --- Phase 3: implemented modules --- */}
 
-      {/* Teachers — admin only */}
+      {/* Terms — admins manage, everyone reads */}
       <Route
-        path="/teachers"
+        path="/terms"
         element={
-          <RoleRoute roles={["admin"]}>
-            <ComingSoon title="Teachers" phase="Phase 3 — Core CRUD" />
+          <RoleRoute roles={["admin", "teacher", "student"]}>
+            <TermsPage />
           </RoleRoute>
         }
       />
@@ -69,7 +60,7 @@ export function AppRoutes() {
         path="/classes"
         element={
           <RoleRoute roles={["admin", "teacher"]}>
-            <ComingSoon title="Classes & Sections" phase="Phase 3 — Core CRUD" />
+            <ClassesPage />
           </RoleRoute>
         }
       />
@@ -79,12 +70,53 @@ export function AppRoutes() {
         path="/subjects"
         element={
           <RoleRoute roles={["admin", "teacher", "student"]}>
-            <ComingSoon title="Subjects" phase="Phase 3 — Core CRUD" />
+            <SubjectsPage />
           </RoleRoute>
         }
       />
 
-      {/* Attendance */}
+      {/* Students — page renders a self-service view for the student role */}
+      <Route
+        path="/students"
+        element={
+          <RoleRoute roles={["admin", "teacher", "student"]}>
+            <StudentsPage />
+          </RoleRoute>
+        }
+      />
+
+      {/* Teachers — admin only */}
+      <Route
+        path="/teachers"
+        element={
+          <RoleRoute roles={["admin"]}>
+            <TeachersPage />
+          </RoleRoute>
+        }
+      />
+
+      {/* Audit log — admin only */}
+      <Route
+        path="/audit"
+        element={
+          <RoleRoute roles={["admin"]}>
+            <AuditPage />
+          </RoleRoute>
+        }
+      />
+
+      {/* Profile — everyone */}
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute>
+            <ProfilePage />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* --- Later phases --- */}
+
       <Route
         path="/attendance"
         element={
@@ -94,7 +126,6 @@ export function AppRoutes() {
         }
       />
 
-      {/* Timetable */}
       <Route
         path="/timetable"
         element={
@@ -104,7 +135,6 @@ export function AppRoutes() {
         }
       />
 
-      {/* Assignments */}
       <Route
         path="/assignments"
         element={
@@ -114,7 +144,6 @@ export function AppRoutes() {
         }
       />
 
-      {/* Exams */}
       <Route
         path="/exams"
         element={
@@ -124,7 +153,6 @@ export function AppRoutes() {
         }
       />
 
-      {/* Fees */}
       <Route
         path="/fees"
         element={
@@ -134,33 +162,12 @@ export function AppRoutes() {
         }
       />
 
-      {/* Announcements */}
       <Route
         path="/announcements"
         element={
           <RoleRoute roles={["admin", "teacher", "student"]}>
             <ComingSoon title="Announcements" phase="Phase 6 — Admin & Ops" />
           </RoleRoute>
-        }
-      />
-
-      {/* Audit — admin only */}
-      <Route
-        path="/audit"
-        element={
-          <RoleRoute roles={["admin"]}>
-            <ComingSoon title="Audit Log" phase="Phase 6 — Admin & Ops" />
-          </RoleRoute>
-        }
-      />
-
-      {/* Profile */}
-      <Route
-        path="/profile"
-        element={
-          <ProtectedRoute>
-            <ComingSoon title="My Profile" phase="Phase 2 — Auth (in progress)" />
-          </ProtectedRoute>
         }
       />
 

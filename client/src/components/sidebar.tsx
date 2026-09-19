@@ -15,6 +15,8 @@ import {
   School,
   UserCog,
   X,
+  CalendarRange,
+  IdCard,
 } from "lucide-react";
 import type { Role } from "@sms/shared";
 import { useAuth } from "@/features/auth/auth-context";
@@ -27,24 +29,64 @@ interface NavItem {
   icon: typeof LayoutDashboard;
   /** Roles allowed to see this item. */
   roles: Role[];
+  /** Optional label override per role, e.g. Students → "My Profile" for students. */
+  labelByRole?: Partial<Record<Role, string>>;
 }
 
 /** Navigation is filtered by role — but this is UX only.
  *  Every endpoint re-checks permissions server-side. */
 const NAV: NavItem[] = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard, roles: ["admin", "teacher", "student"] },
-  { to: "/students", label: "Students", icon: GraduationCap, roles: ["admin", "teacher"] },
-  { to: "/teachers", label: "Teachers", icon: Users, roles: ["admin"] },
+  {
+    to: "/terms",
+    label: "Academic Terms",
+    icon: CalendarRange,
+    roles: ["admin", "teacher", "student"],
+  },
   { to: "/classes", label: "Classes", icon: School, roles: ["admin", "teacher"] },
+  {
+    to: "/students",
+    label: "Students",
+    icon: GraduationCap,
+    roles: ["admin", "teacher", "student"],
+    labelByRole: { student: "My Profile" },
+  },
+  { to: "/teachers", label: "Teachers", icon: Users, roles: ["admin"] },
   { to: "/subjects", label: "Subjects", icon: BookOpen, roles: ["admin", "teacher", "student"] },
-  { to: "/attendance", label: "Attendance", icon: CalendarCheck, roles: ["admin", "teacher", "student"] },
-  { to: "/timetable", label: "Timetable", icon: CalendarClock, roles: ["admin", "teacher", "student"] },
-  { to: "/assignments", label: "Assignments", icon: ClipboardList, roles: ["admin", "teacher", "student"] },
-  { to: "/exams", label: "Exams & Grades", icon: FileText, roles: ["admin", "teacher", "student"] },
+  {
+    to: "/attendance",
+    label: "Attendance",
+    icon: CalendarCheck,
+    roles: ["admin", "teacher", "student"],
+  },
+  {
+    to: "/timetable",
+    label: "Timetable",
+    icon: CalendarClock,
+    roles: ["admin", "teacher", "student"],
+  },
+  {
+    to: "/assignments",
+    label: "Assignments",
+    icon: ClipboardList,
+    roles: ["admin", "teacher", "student"],
+  },
+  {
+    to: "/exams",
+    label: "Exams & Grades",
+    icon: FileText,
+    roles: ["admin", "teacher", "student"],
+  },
   { to: "/fees", label: "Fees", icon: Receipt, roles: ["admin", "student"] },
-  { to: "/announcements", label: "Announcements", icon: Megaphone, roles: ["admin", "teacher", "student"] },
+  {
+    to: "/announcements",
+    label: "Announcements",
+    icon: Megaphone,
+    roles: ["admin", "teacher", "student"],
+  },
   { to: "/audit", label: "Audit Log", icon: History, roles: ["admin"] },
-  { to: "/profile", label: "My Profile", icon: UserCog, roles: ["admin", "teacher", "student"] },
+  { to: "/profile", label: "Account", icon: IdCard, roles: ["admin", "teacher"] },
+  { to: "/profile", label: "Account", icon: UserCog, roles: ["student"] },
 ];
 
 export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
@@ -98,9 +140,9 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
 
         {/* Nav */}
         <nav className="flex-1 space-y-0.5 overflow-y-auto px-3 py-4">
-          {visible.map(({ to, label, icon: Icon }) => (
+          {visible.map(({ to, label, icon: Icon, labelByRole }) => (
             <NavLink
-              key={to}
+              key={label}
               to={to}
               end={to === "/"}
               onClick={onClose}
@@ -114,7 +156,7 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
               }
             >
               <Icon className="size-4 shrink-0" />
-              {label}
+              {labelByRole?.[user.role] ?? label}
             </NavLink>
           ))}
         </nav>
