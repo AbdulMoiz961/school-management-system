@@ -19,11 +19,16 @@ import { Student } from "../models/Student.js";
 import { Teacher } from "../models/Teacher.js";
 import { User } from "../models/User.js";
 import { AuditLog } from "../models/AuditLog.js";
+import { Attendance } from "../models/Attendance.js";
+import { TimetableSlot } from "../models/TimetableSlot.js";
+import { Announcement } from "../models/Announcement.js";
 
 const TERM_PATTERN = /^(VP-\d+|Verify \d+)$/;
-const STUDENT_EMAIL_PATTERN = /^(vp|vp2|sara)-\d+@scholaris\.dev$/;
+const STUDENT_EMAIL_PATTERN = /^(vp|vp2|sara|iso)-\d+@scholaris\.dev$/;
 const TEACHER_EMAIL_PATTERN = /^vt-\d+@scholaris\.dev$/;
 const GENERIC_TEST_EMAIL = /\.(test|example)@|@example\.com$/;
+/** Second-name marker used by fixtures whose email pattern may vary. */
+const TEST_LASTNAME_PATTERN = /^(Student|Probe|Teacher)\d+$/;
 
 const KEEP = ["admin@scholaris.dev", "teacher@scholaris.dev", "student@scholaris.dev"];
 
@@ -35,8 +40,23 @@ async function main() {
   const subjects = await Subject.deleteMany({ code: /^VP-\d+$/ });
   console.log(`  subjects removed  ${subjects.deletedCount}`);
 
+  // Attendance and timetable rows reference students/teachers, so clear them
+  // first. These have no test marker of their own — every row is a fixture.
+  const attendance = await Attendance.deleteMany({});
+  console.log(`  attendance removed ${attendance.deletedCount}`);
+
+  const slots = await TimetableSlot.deleteMany({});
+  console.log(`  timetable removed  ${slots.deletedCount}`);
+
+  const notices = await Announcement.deleteMany({});
+  console.log(`  announcements removed ${notices.deletedCount}`);
+
   const students = await Student.deleteMany({
-    $or: [{ email: STUDENT_EMAIL_PATTERN }, { email: GENERIC_TEST_EMAIL }],
+    $or: [
+      { email: STUDENT_EMAIL_PATTERN },
+      { email: GENERIC_TEST_EMAIL },
+      { lastName: TEST_LASTNAME_PATTERN },
+    ],
   });
   console.log(`  students removed  ${students.deletedCount}`);
 

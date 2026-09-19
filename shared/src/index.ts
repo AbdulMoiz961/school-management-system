@@ -261,6 +261,70 @@ export interface ReportCard {
 }
 
 /* ------------------------------------------------------------------ *
+ * Phase 4 — inputs & view models
+ * ------------------------------------------------------------------ */
+
+/** One row of a class register, as submitted by a teacher. */
+export interface AttendanceEntryInput {
+  studentId: string;
+  status: AttendanceStatus;
+  note?: string;
+}
+
+export interface AttendanceRegisterInput {
+  subjectId: string;
+  /** ISO date (day granularity). */
+  date: string;
+  entries: AttendanceEntryInput[];
+}
+
+/** A class register: one row per enrolled student for a subject + date. */
+export interface AttendanceRegisterView {
+  subjectId: string;
+  subjectName: string;
+  classSectionId?: string;
+  className?: string;
+  date: string;
+  rows: AttendanceRegisterRow[];
+  /** True when a register already exists for this date (edit rather than create). */
+  alreadyMarked: boolean;
+}
+
+export interface TimetableSlotInput {
+  classSectionId: string;
+  subjectId: string;
+  teacherId: string;
+  day: Weekday;
+  /** "HH:mm" 24h. */
+  startTime: string;
+  endTime: string;
+}
+
+/** A slot plus the display names the UI needs, so it isn't resolving ids itself. */
+export interface TimetableSlotView extends TimetableSlot {
+  subjectName: string;
+  subjectCode: string;
+  teacherName: string;
+  className: string;
+}
+
+/** Result of a conflict pre-flight check. */
+export interface ConflictCheckResult {
+  hasConflict: boolean;
+  conflicts: TimetableConflict[];
+}
+
+export interface AnnouncementInput {
+  title: string;
+  body: string;
+  /** Empty = visible to every role. */
+  audienceRoles: Role[];
+  classSectionId?: string;
+  /** Whether students/parents need to acknowledge it. */
+  requiresAcknowledgement?: boolean;
+}
+
+/* ------------------------------------------------------------------ *
  * Fees
  * ------------------------------------------------------------------ */
 
@@ -299,7 +363,10 @@ export interface Announcement {
   classSectionId?: string;
   classSectionName?: string;
   authorId: string;
-  authorName: string;
+  authorName?: string;
+  requiresAcknowledgement: boolean;
+  /** How many users have acknowledged (only meaningful when required). */
+  acknowledgementCount: number;
   createdAt: string;
 }
 

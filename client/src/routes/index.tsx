@@ -5,11 +5,14 @@ import RegisterPage from "@/pages/register";
 import DashboardPage from "@/pages/dashboard";
 import TermsPage from "@/pages/terms";
 import ClassesPage from "@/pages/classes";
-import SubjectsPage from "@/pages/subjects";
 import StudentsPage from "@/pages/students";
 import TeachersPage from "@/pages/teachers";
+import SubjectsPage from "@/pages/subjects";
 import AuditPage from "@/pages/audit";
 import ProfilePage from "@/pages/profile";
+import AttendancePage from "@/pages/attendance";
+import TimetablePage from "@/pages/timetable";
+import AnnouncementsPage from "@/pages/announcements";
 import { ComingSoon } from "@/pages/coming-soon";
 
 export function AppRoutes() {
@@ -121,7 +124,7 @@ export function AppRoutes() {
         path="/attendance"
         element={
           <RoleRoute roles={["admin", "teacher", "student"]}>
-            <ComingSoon title="Attendance" phase="Phase 4 — Daily operations" />
+            <AttendancePage />
           </RoleRoute>
         }
       />
@@ -130,7 +133,7 @@ export function AppRoutes() {
         path="/timetable"
         element={
           <RoleRoute roles={["admin", "teacher", "student"]}>
-            <ComingSoon title="Timetable" phase="Phase 4 — Daily operations" />
+            <TimetablePage />
           </RoleRoute>
         }
       />
@@ -166,7 +169,7 @@ export function AppRoutes() {
         path="/announcements"
         element={
           <RoleRoute roles={["admin", "teacher", "student"]}>
-            <ComingSoon title="Announcements" phase="Phase 6 — Admin & Ops" />
+            <AnnouncementsPage />
           </RoleRoute>
         }
       />
