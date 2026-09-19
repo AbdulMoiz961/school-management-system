@@ -71,10 +71,30 @@ export function escapeRegex(input: string): string {
   return input.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-/** Case-insensitive "contains" filter across several fields. */
+/**
+ * Case-insensitive multi-term search across several fields.
+ *
+ * Each whitespace-separated term must match at least one of the fields, but the
+ * fields are independent — so "Verify Student" matches a record with
+ * firstName="Verify" AND lastName="Student", which a single-phrase regex would
+ * miss because neither field contains the whole string.
+ *
+ * Terms are ANDed (`$and` of `$or`s): adding words narrows the result set.
+ */
 export function searchFilter(search: string | undefined, fields: string[]): FilterQuery<unknown> {
-  const term = search?.trim();
-  if (!term) return {};
-  const rx = new RegExp(escapeRegex(term), "i");
-  return { $or: fields.map((f) => ({ [f]: rx })) } as FilterQuery<unknown>;
+  const terms = (search ?? "")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 8); // cap so a pathological input can't build a huge query
+
+  if (terms.length === 0) return {};
+
+  const clauses = terms.map((term) => {
+    // Escape per-term so metacharacters are treated literally (no ReDoS).
+    const rx = new RegExp(escapeRegex(term), "i");
+    return { $or: fields.map((f) => ({ [f]: rx })) };
+  });
+
+  return clauses.length === 1 ? clauses[0]! : ({ $and: clauses } as FilterQuery<unknown>);
 }

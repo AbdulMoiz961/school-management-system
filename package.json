@@ -19,7 +19,10 @@
     "lint": "npm run lint --workspaces --if-present",
     "format": "prettier --write \"**/*.{ts,tsx,js,json,md}\"",
     "test": "npm run test --workspaces --if-present",
-    "seed": "npm run seed --workspace=server"
+    "seed": "npm run seed --workspace=server",
+    "clean:test": "npm run clean:test --workspace=server",
+    "verify:api": "bash scripts/api-verify.sh",
+    "verify:ui": "python3 scripts/ui-verify.py"
   },
   "devDependencies": {
     "prettier": "^3.7.3"

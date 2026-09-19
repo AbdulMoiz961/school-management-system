@@ -10,6 +10,8 @@
     "start": "node dist/index.js",
     "typecheck": "tsc --noEmit",
     "seed": "tsx src/scripts/seed.ts",
+    "clean:test": "tsx src/scripts/clean-test-data.ts",
+    "verify:api": "bash ../scripts/api-verify.sh",
     "test": "vitest run"
   },
   "dependencies": {
