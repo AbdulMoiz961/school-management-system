@@ -95,6 +95,18 @@ import {
 } from "../validators/assessment.validator.js";
 import { teacherSubjectIds, assertOwnsSubject } from "../utils/subject-scope.js";
 import {
+  listInvoices,
+  createInvoice,
+  recordPayment,
+  deleteInvoice,
+  myInvoices,
+} from "../services/fee.service.js";
+import { getDashboard } from "../services/dashboard.service.js";
+import {
+  createInvoiceSchema,
+  recordPaymentSchema,
+} from "../validators/fee.validator.js";
+import {
   listQuerySchema,
   createTermSchema,
   updateTermSchema,
@@ -847,6 +859,79 @@ apiRouter.get(
     if (!req.user) throw ApiError.unauthorized();
     const own = await getStudentForSelf(req.user.id);
     sendSuccess(res, await myResults(own.id));
+  }),
+);
+
+/* ================================================================ PHASE 6 */
+
+/* -------------------------------------------------------------------- fees */
+
+apiRouter.get(
+  "/fees",
+  protect,
+  staffOnly,
+  validate(listQuerySchema, "query"),
+  catchAsync(async (req, res) => {
+    const { items, pagination } = await listInvoices(req.query as never);
+    sendPaginated(res, items, pagination);
+  }),
+);
+
+/** A student's own invoices. */
+apiRouter.get(
+  "/fees/me",
+  protect,
+  catchAsync(async (req, res) => {
+    if (!req.user) throw ApiError.unauthorized();
+    const own = await getStudentForSelf(req.user.id);
+    sendSuccess(res, await myInvoices(own.id));
+  }),
+);
+
+apiRouter.post(
+  "/fees",
+  protect,
+  adminOnly,
+  validate(createInvoiceSchema),
+  catchAsync(async (req, res) => {
+    if (!req.user) throw ApiError.unauthorized();
+    sendSuccess(res, await createInvoice(req.body, { ...actorFromRequest(req), id: req.user.id }), 201);
+  }),
+);
+
+apiRouter.post(
+  "/fees/:id/payments",
+  protect,
+  adminOnly,
+  validate(recordPaymentSchema),
+  catchAsync(async (req, res) => {
+    if (!req.user) throw ApiError.unauthorized();
+    sendSuccess(
+      res,
+      await recordPayment(String(req.params.id), req.body, { ...actorFromRequest(req), id: req.user.id }),
+      201,
+    );
+  }),
+);
+
+apiRouter.delete(
+  "/fees/:id",
+  protect,
+  adminOnly,
+  catchAsync(async (req, res) => {
+    await deleteInvoice(String(req.params.id), actorFromRequest(req));
+    sendSuccess(res, { message: "Invoice removed" });
+  }),
+);
+
+/* -------------------------------------------------------------- dashboard */
+
+apiRouter.get(
+  "/dashboard",
+  protect,
+  catchAsync(async (req, res) => {
+    if (!req.user) throw ApiError.unauthorized();
+    sendSuccess(res, await getDashboard({ role: req.user.role, id: req.user.id }));
   }),
 );
 

@@ -334,6 +334,8 @@ export interface AnnouncementInput {
 export interface FeeInvoice {
   id: string;
   studentId: string;
+  /** Present on list responses so the UI doesn't resolve ids itself. */
+  studentName?: string;
   title: string;
   amount: number;
   currency: string;
@@ -385,6 +387,50 @@ export interface AuditLogEntry {
   /** Field-level diff. Only populated for updates. */
   changes?: Record<string, { from: unknown; to: unknown }>;
   at: string;
+}
+
+/* ------------------------------------------------------------------ *
+ * Phase 6 — dashboard & at-risk
+ * ------------------------------------------------------------------ */
+
+/** A student flagged for low attendance or weak grades. */
+export interface AtRiskStudent {
+  studentId: string;
+  name: string;
+  rollNumber: string;
+  classSectionName?: string;
+  attendancePercentage: number;
+  overallPercentage?: number;
+  reasons: string[];
+}
+
+export interface DashboardStats {
+  /** Counts, scoped to the viewer's role. */
+  counts: {
+    students: number;
+    teachers: number;
+    classes: number;
+    subjects: number;
+  };
+  attendance: {
+    /** School-wide (or class-wide for a teacher) average percentage. */
+    average: number;
+    todayMarked: number;
+  };
+  fees: {
+    collected: number;
+    outstanding: number;
+    /** Number of invoices unpaid or overdue. */
+    unpaidInvoices: number;
+  };
+  atRisk: AtRiskStudent[];
+  recentActivity: {
+    resource: string;
+    resourceLabel?: string;
+    action: string;
+    at: string;
+    actorEmail: string;
+  }[];
 }
 
 /* ------------------------------------------------------------------ *

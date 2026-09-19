@@ -13,9 +13,9 @@ import ProfilePage from "@/pages/profile";
 import AttendancePage from "@/pages/attendance";
 import TimetablePage from "@/pages/timetable";
 import AnnouncementsPage from "@/pages/announcements";
-import { ComingSoon } from "@/pages/coming-soon";
 import AssignmentsPage from "@/pages/assignments";
 import ExamsPage from "@/pages/exams";
+import FeesPage from "@/pages/fees";
 
 export function AppRoutes() {
   return (
@@ -162,7 +162,7 @@ export function AppRoutes() {
         path="/fees"
         element={
           <RoleRoute roles={["admin", "student"]}>
-            <ComingSoon title="Fees" phase="Phase 6 — Admin & Ops" />
+            <FeesPage />
           </RoleRoute>
         }
       />
