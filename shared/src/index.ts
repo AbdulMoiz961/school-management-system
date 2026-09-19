@@ -199,6 +199,8 @@ export interface TimetableConflict {
 export interface Assignment {
   id: string;
   subjectId: string;
+  /** Present on list responses so the UI doesn't resolve ids itself. */
+  subjectName?: string;
   title: string;
   description: string;
   dueDate: string;
@@ -224,6 +226,7 @@ export interface Submission {
 export interface Exam {
   id: string;
   subjectId: string;
+  subjectName?: string;
   name: string;
   examDate: string;
   maxMarks: number;
@@ -510,3 +513,5 @@ export interface ApiErrorBody {
   errors?: Record<string, string[]>;
   code?: string;
 }
+
+export { GRADE_SCALE, gradeFor, pct } from "./grading.js";

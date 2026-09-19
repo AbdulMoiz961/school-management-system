@@ -71,6 +71,30 @@ import {
   acknowledge,
 } from "../services/announcement.service.js";
 import {
+  listAssignments,
+  createAssignment,
+  deleteAssignment,
+  listSubmissions,
+  getMySubmission,
+  submitAssignment,
+  gradeSubmission,
+  listExams,
+  createExam,
+  deleteExam,
+  getExamSheet,
+  saveExamMarks,
+  buildReportCard,
+  myResults,
+} from "../services/assessment.service.js";
+import {
+  createAssignmentSchema,
+  submitAssignmentSchema,
+  gradeSubmissionSchema,
+  createExamSchema,
+  saveExamMarksSchema,
+} from "../validators/assessment.validator.js";
+import { teacherSubjectIds, assertOwnsSubject } from "../utils/subject-scope.js";
+import {
   listQuerySchema,
   createTermSchema,
   updateTermSchema,
@@ -632,6 +656,197 @@ apiRouter.post(
   catchAsync(async (req, res) => {
     if (!req.user) throw ApiError.unauthorized();
     sendSuccess(res, await acknowledge(String(req.params.id), req.user.id));
+  }),
+);
+
+/* ================================================================ PHASE 5 */
+
+/* ---------------------------------------------------------------- assignments */
+
+apiRouter.get(
+  "/assignments",
+  protect,
+  validate(listQuerySchema, "query"),
+  catchAsync(async (req, res) => {
+    const scoped = await teacherSubjectIds(req);
+    const { items, pagination } = await listAssignments(req.query as never, {
+      ...(scoped ? { subjectIds: scoped } : {}),
+    });
+    sendPaginated(res, items, pagination);
+  }),
+);
+
+apiRouter.post(
+  "/assignments",
+  protect,
+  staffOnly,
+  validate(createAssignmentSchema),
+  catchAsync(async (req, res) => {
+    if (!req.user) throw ApiError.unauthorized();
+    await assertOwnsSubject(req, req.body.subjectId);
+    sendSuccess(
+      res,
+      await createAssignment(req.body, { ...actorFromRequest(req), id: req.user.id }),
+      201,
+    );
+  }),
+);
+
+apiRouter.delete(
+  "/assignments/:id",
+  protect,
+  staffOnly,
+  catchAsync(async (req, res) => {
+    await deleteAssignment(String(req.params.id), actorFromRequest(req));
+    sendSuccess(res, { message: "Assignment removed" });
+  }),
+);
+
+/** A student's own submission for an assignment (null when not submitted). */
+apiRouter.get(
+  "/assignments/:id/my-submission",
+  protect,
+  catchAsync(async (req, res) => {
+    if (!req.user) throw ApiError.unauthorized();
+    const own = await getStudentForSelf(req.user.id);
+    sendSuccess(res, await getMySubmission(String(req.params.id), own.id));
+  }),
+);
+
+/** Submit work. `isLate` is computed server-side from the due date. */
+apiRouter.post(
+  "/assignments/:id/submit",
+  protect,
+  validate(submitAssignmentSchema),
+  catchAsync(async (req, res) => {
+    if (!req.user) throw ApiError.unauthorized();
+    const own = await getStudentForSelf(req.user.id);
+    sendSuccess(
+      res,
+      await submitAssignment({ ...req.body, assignmentId: String(req.params.id) }, own.id),
+      201,
+    );
+  }),
+);
+
+/** The grading queue for one assignment. */
+apiRouter.get(
+  "/assignments/:id/submissions",
+  protect,
+  staffOnly,
+  catchAsync(async (req, res) => {
+    sendSuccess(res, await listSubmissions(String(req.params.id)));
+  }),
+);
+
+apiRouter.patch(
+  "/submissions/:id/grade",
+  protect,
+  staffOnly,
+  validate(gradeSubmissionSchema),
+  catchAsync(async (req, res) => {
+    if (!req.user) throw ApiError.unauthorized();
+    sendSuccess(
+      res,
+      await gradeSubmission(String(req.params.id), req.body, {
+        ...actorFromRequest(req),
+        id: req.user.id,
+      }),
+    );
+  }),
+);
+
+/* -------------------------------------------------------------------- exams */
+
+apiRouter.get(
+  "/exams",
+  protect,
+  validate(listQuerySchema, "query"),
+  catchAsync(async (req, res) => {
+    const scoped = await teacherSubjectIds(req);
+    const { items, pagination } = await listExams(req.query as never, {
+      ...(scoped ? { subjectIds: scoped } : {}),
+    });
+    sendPaginated(res, items, pagination);
+  }),
+);
+
+apiRouter.post(
+  "/exams",
+  protect,
+  staffOnly,
+  validate(createExamSchema),
+  catchAsync(async (req, res) => {
+    if (!req.user) throw ApiError.unauthorized();
+    await assertOwnsSubject(req, req.body.subjectId);
+    sendSuccess(res, await createExam(req.body, { ...actorFromRequest(req), id: req.user.id }), 201);
+  }),
+);
+
+apiRouter.delete(
+  "/exams/:id",
+  protect,
+  staffOnly,
+  catchAsync(async (req, res) => {
+    await deleteExam(String(req.params.id), actorFromRequest(req));
+    sendSuccess(res, { message: "Exam removed" });
+  }),
+);
+
+/** Marks-entry sheet: every enrolled student plus any mark already entered. */
+apiRouter.get(
+  "/exams/:id/sheet",
+  protect,
+  staffOnly,
+  catchAsync(async (req, res) => {
+    sendSuccess(res, await getExamSheet(String(req.params.id)));
+  }),
+);
+
+apiRouter.post(
+  "/exams/:id/marks",
+  protect,
+  staffOnly,
+  validate(saveExamMarksSchema),
+  catchAsync(async (req, res) => {
+    if (!req.user) throw ApiError.unauthorized();
+    sendSuccess(
+      res,
+      await saveExamMarks(String(req.params.id), req.body.entries, {
+        ...actorFromRequest(req),
+        id: req.user.id,
+      }),
+      201,
+    );
+  }),
+);
+
+/* ------------------------------------------------------------------ results */
+
+/** Computed report card for a student. Students may only read their own. */
+apiRouter.get(
+  "/results/report-card/:studentId",
+  protect,
+  catchAsync(async (req, res) => {
+    const studentId = String(req.params.studentId);
+    if (req.user?.role === "student") {
+      const own = await getStudentForSelf(req.user.id);
+      if (own.id !== studentId) {
+        throw ApiError.forbidden("You can only view your own report card");
+      }
+    }
+    sendSuccess(res, await buildReportCard(studentId));
+  }),
+);
+
+/** A student's own exam results. */
+apiRouter.get(
+  "/results/me",
+  protect,
+  catchAsync(async (req, res) => {
+    if (!req.user) throw ApiError.unauthorized();
+    const own = await getStudentForSelf(req.user.id);
+    sendSuccess(res, await myResults(own.id));
   }),
 );
 

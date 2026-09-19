@@ -14,6 +14,8 @@ import AttendancePage from "@/pages/attendance";
 import TimetablePage from "@/pages/timetable";
 import AnnouncementsPage from "@/pages/announcements";
 import { ComingSoon } from "@/pages/coming-soon";
+import AssignmentsPage from "@/pages/assignments";
+import ExamsPage from "@/pages/exams";
 
 export function AppRoutes() {
   return (
@@ -142,7 +144,7 @@ export function AppRoutes() {
         path="/assignments"
         element={
           <RoleRoute roles={["admin", "teacher", "student"]}>
-            <ComingSoon title="Assignments" phase="Phase 5 — Assessment" />
+            <AssignmentsPage />
           </RoleRoute>
         }
       />
@@ -151,7 +153,7 @@ export function AppRoutes() {
         path="/exams"
         element={
           <RoleRoute roles={["admin", "teacher", "student"]}>
-            <ComingSoon title="Exams & Grades" phase="Phase 5 — Assessment" />
+            <ExamsPage />
           </RoleRoute>
         }
       />
