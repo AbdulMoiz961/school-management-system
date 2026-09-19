@@ -24,7 +24,7 @@ import { TimetableSlot } from "../models/TimetableSlot.js";
 import { Announcement } from "../models/Announcement.js";
 
 const TERM_PATTERN = /^(VP-\d+|Verify \d+)$/;
-const STUDENT_EMAIL_PATTERN = /^(vp|vp2|sara|iso)-\d+@scholaris\.dev$/;
+const STUDENT_EMAIL_PATTERN = /^(vp|vp2|sara|iso|p5)-\d+@scholaris\.dev$/;
 const TEACHER_EMAIL_PATTERN = /^vt-\d+@scholaris\.dev$/;
 const GENERIC_TEST_EMAIL = /\.(test|example)@|@example\.com$/;
 /** Second-name marker used by fixtures whose email pattern may vary. */
