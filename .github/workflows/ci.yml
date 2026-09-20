@@ -8,7 +8,7 @@ on:
 
 jobs:
   verify:
-    name: Lint, typecheck & build
+    name: Typecheck & build
     runs-on: ubuntu-latest
 
     steps:
